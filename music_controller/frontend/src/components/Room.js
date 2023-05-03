@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button, Grid, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import CreateRoomPage from './CreateRoomPage';
 
 const Room = ({ leaveRoomCallback }) => {
     const [votesToSkip, setVotesToSkip] = useState(2);
     const [guestCanPause, setGuestCanPause] = useState(false);
     const [isHost, setIsHost] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
     const { roomCode } = useParams();
     const navigate = useNavigate();
 
@@ -41,6 +43,47 @@ const Room = ({ leaveRoomCallback }) => {
         });
     }
 
+    const updateShowSettings = (value) => {
+        setShowSettings(value);
+    }
+
+    const renderSettings = () => {
+        return (
+            <Grid container spacing={1}>
+                <Grid item xs={12} align="center">
+                    <CreateRoomPage 
+                        update={true} 
+                        votesToSkip={votesToSkip} 
+                        guestCanPause={guestCanPause} 
+                        roomCode={roomCode} 
+                        updateCallback={{}}
+                    />
+                </Grid>
+                <Grid item xs={12} align="center">
+                    <Button 
+                        variant="contained" 
+                        color="secondary" 
+                        onClick={() => updateShowSettings(false)}>
+                        Close
+                    </Button>
+                </Grid>
+            </Grid>
+        );
+    }
+
+    const renderSettingsButton = () => {
+        return (
+            <Grid item xs={12} align="center">
+                <Button variant="contained" color='primary' onClick={() => updateShowSettings(true)}>
+                    Settings
+                </Button>
+            </Grid>
+        ); 
+    }
+
+    if (showSettings) {
+        return renderSettings()
+    }
     return (
         <Grid container spacing={1}>
             <Grid item xs={12} align="center">
@@ -63,6 +106,7 @@ const Room = ({ leaveRoomCallback }) => {
                     Host: {isHost.toString()}
                 </Typography>
             </Grid>
+            {isHost ? renderSettingsButton() : null}
             <Grid item xs={12} align="center">
                 <Button variant="contained" color="secondary" onClick={leaveButtonPressed}>
                     Leave Room
@@ -73,3 +117,4 @@ const Room = ({ leaveRoomCallback }) => {
 };
 
 export default Room;
+
