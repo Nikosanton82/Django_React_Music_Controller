@@ -36,6 +36,10 @@ const Room = ({ leaveRoomCallback }) => {
                 setVotesToSkip(data.votes_to_skip);
                 setGuestCanPause(data.guest_can_pause);
                 setIsHost(data.is_host);
+    
+                if (isHost && !spotifyAuthenticated) {
+                    authenticateSpotify();
+                }
             });
     };
 
