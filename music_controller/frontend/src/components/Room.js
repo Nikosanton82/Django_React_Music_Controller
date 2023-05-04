@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button, Grid, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import CreateRoomPage from './CreateRoomPage';
+import MusicPlayer from './MusicPlayer';
 
 const Room = ({ leaveRoomCallback }) => {
     const [votesToSkip, setVotesToSkip] = useState(2);
@@ -10,12 +11,33 @@ const Room = ({ leaveRoomCallback }) => {
     const [isHost, setIsHost] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [spotifyAuthenticated, setSpotifyAuthenticated] = useState(false);
+    const [song, setSong] = useState(null); // Initialize the song state
     const { roomCode } = useParams();
     const navigate = useNavigate();
+
+    const getCurrentSong = useCallback(() => {
+        fetch('/spotify/current-song').then((response) => {
+            if (!response.ok) {
+                return {};
+            } else {
+                return response.json();
+            }
+        }).then((data) => {
+            setSong(data); // Update the song state
+            console.log(data);
+        });
+    }, []); // Add an empty dependency array
 
     useEffect(() => {
         getRoomDetails();
     }, []);
+
+    useEffect(() => {
+        const interval = setInterval(getCurrentSong, 1000);
+        return () => {
+            clearInterval(interval);
+        };
+    }, [getCurrentSong]);
 
     useEffect(() => {
         if (isHost) {
@@ -73,30 +95,6 @@ const Room = ({ leaveRoomCallback }) => {
         setShowSettings(value);
     }
 
-    const renderSettings = () => {
-        return (
-            <Grid container spacing={1}>
-                <Grid item xs={12} align="center">
-                    <CreateRoomPage 
-                        update={true} 
-                        votesToSkip={votesToSkip} 
-                        guestCanPause={guestCanPause} 
-                        roomCode={roomCode} 
-                        updateCallback={getRoomDetails}
-                    />
-                </Grid>
-                <Grid item xs={12} align="center">
-                    <Button 
-                        variant="contained" 
-                        color="secondary" 
-                        onClick={() => updateShowSettings(false)}>
-                        Close
-                    </Button>
-                </Grid>
-            </Grid>
-        );
-    }
-
     const renderSettingsButton = () => {
         return (
             <Grid item xs={12} align="center">
@@ -104,11 +102,11 @@ const Room = ({ leaveRoomCallback }) => {
                     Settings
                 </Button>
             </Grid>
-        ); 
+        );
     }
 
     if (showSettings) {
-        return renderSettings()
+        return renderSettings();
     }
     return (
         <Grid container spacing={1}>
@@ -117,21 +115,7 @@ const Room = ({ leaveRoomCallback }) => {
                     Code: {roomCode}
                 </Typography>
             </Grid>
-            <Grid item xs={12} align="center">
-                <Typography variant='h6' component="h6">
-                    Votes: {votesToSkip}
-                </Typography>
-            </Grid>
-            <Grid item xs={12} align="center">
-                <Typography variant='h6' component="h6">
-                    Guest Can Pause: {guestCanPause.toString()}
-                </Typography>
-            </Grid>
-            <Grid item xs={12} align="center">
-                <Typography variant='h6' component="h6">
-                    Host: {isHost.toString()}
-                </Typography>
-            </Grid>
+            <MusicPlayer {...song} />
             {isHost ? renderSettingsButton() : null}
             <Grid item xs={12} align="center">
                 <Button variant="contained" color="secondary" onClick={leaveButtonPressed}>
@@ -143,4 +127,3 @@ const Room = ({ leaveRoomCallback }) => {
 };
 
 export default Room;
-
